@@ -1,11 +1,17 @@
 {
     "name": "pipelinepilot",
     "source": [
-        "widget.js"
+        "widget.js",
+        "stylerController.js",
+        "other/tablesort.min.js",
+        "semantic/semantic.min.js",
+        "other/jquery.validate.min.js"
     ],
-    "style": [],
-    "lastUpdate": "2018-04-08T02:31:58.507Z",
+    "style": [
+        "semantic/semantic.min.css"
+    ],
+    "lastUpdate": "2018-04-19T01:00:00.600Z",
     "folderName": "pipelinepilot",
-    "isEnabled": false,
+    "isEnabled": true,
     "version": "0"
 }

@@ -3,12 +3,12 @@ prism.registerWidget("pipelinepilot", {
 
 	name: "pipelinepilot",
 	family: "Web Services",
-    title: "Pipeline Pilot",
+	title: "Pipeline Pilot",
 	iconSmall: "/plugins/pipelinepilot/widget.png",
 	styleEditorTemplate: "/plugins/pipelinepilot/styler.html",
 	style: {
-		plpurl: '';
-		rowlimit: 2500
+		plpurl: 'http://myserver:myport/my-protocol-url-here',
+		rowlimit: 50000
 	},
 	data:  {
 
@@ -38,12 +38,7 @@ prism.registerWidget("pipelinepilot", {
 		],
 		
 		allocatePanel: function (widget, metadataItem) {
-
-			// items
-			//if (!prism.$jaql.isMeasure(metadataItem) && widget.metadata.panel("items").items.length <= 25) {
-
 				return "items";
-			//}
 
 		},
 
@@ -55,16 +50,7 @@ prism.registerWidget("pipelinepilot", {
 
 		// ranks the compatibility of the given metadata items with the widget
 		rankMetadata: function (items, type, subtype) {
-
-			var a = prism.$jaql.analyze(items);
-
-			// require 1 to 25 dimensions 
-			//if ((a.dimensions.length > 0 && a.dimensions.length <= 25)) {
-
-				return 0;
-			//}
-
-			return -1;
+			return 0;
 		},
 
 		// populates the metadata items to the widget
@@ -103,7 +89,7 @@ prism.registerWidget("pipelinepilot", {
 			if (widget.style.rowlimit && widget.style.rowlimit*1 && parseInt(widget.style.rowlimit)) { // numeric and non-zero
 				query.count = parseInt(widget.style.rowlimit);
 			} else {
-				query.count = 2500;
+				query.count = 50000;
 			}
 			query.offset = 0;
 
@@ -118,12 +104,12 @@ prism.registerWidget("pipelinepilot", {
 	render: function (widget, event) {
 
 		// Get widget body (dom element)
-		var $lmnt = $(event.element);
+		var $lmnt = $(event.element);//.find('.widget-body');
 
 		// Clear out any old elements
 		$lmnt.empty();
 		// give it an ID
-		$lmnt.attr('id') = 'plpcontent_' + widget.oid;
+		$lmnt.attr('id', 'plpcontent_' + widget.oid);
 
 		// Reshape data
 		var results = widget.rawQueryResult;
@@ -160,35 +146,19 @@ prism.registerWidget("pipelinepilot", {
 		if (widget.style.rowlimit && widget.style.rowlimit*1 && parseInt(widget.style.rowlimit)) { // numeric and non-zero
 			rlimit = parseInt(widget.style.rowlimit);
 		} else {
-			rlimit = 2500;
+			rlimit = 50000;
 		}
 
 		/******************************
 		**	PUT EVERYTHING TOGETHER  **
 		******************************/
 
-		// Run Pipeline Pilot
-		// send data to it
-		// run its scripts
-		// apply its css styles
-		// display its html or other output
-		//(arr, widget.oid, rlimit, numeric_cols);
-		
-		
-		// Run a PLP protocol using a URL, insert protocol output 
-		// into an HTML element (e.g. #appcontent_).
-
 		// Notes:
-		// * semantic (whole) breaks sisense table headers - load piecemeal without "table" in plp protocols -
-		//	- or what do we actually do in plp table components? 
-		// * is it possible to apply css to a single div?
+		// DataTables from PLP will show unstyled search and pagination - to avoid conflicts with built-in Sisense tables
 		// * two or more plp widgets in a dashboard - any problems?
-		// * plp 2018 - any new js or css includes to parse?
-		// * if the user is not logged in show a button to raise a pop-up window then refresh the dashboard window
-		// * cross-origin instructions in the plp install - v2018 vs older - different steps
+		// Cross-domain CORS instructions for PLP - v2018 vs older - different steps
 
-
-		function plpUrlRunner(url, elementselector) {
+		function plpUrlRunner(url, elementselector, data) {
 
 		  $.ajaxSetup({  // cross-site scripting
 			xhrFields: {
@@ -197,59 +167,133 @@ prism.registerWidget("pipelinepilot", {
 		  });
 		  $.support.cors = true;
 
-		  var login_url = 'http://saberwin:9944/protocols/Web%20Services/Saber/Notebook/Utilities/Internals/Check%20Session?$streamdata=result'; // check session
+		  var s = widget.style.plpurl.split('/'); var plpserverroot = s[0] + '//' + s[2];
+		  var login_url = plpserverroot + '/auth/launchjob?$protocol=Components/Semantic+UI/Utilities/Internals/PLP+Login+Pop-Up&$streamfile='; // plp login prompt
+		  var probe_url = plpserverroot + '/auth/launchjob?$protocol=Components/Semantic+UI/Utilities/Internals/Check+Session'; // check session
 
+		  function popupwindow(cururl, url, title, w, h) {
+			var left = (screen.width/2)-(w/2);
+			var top = (screen.height/2)-(h/2);
+			popupWindow =  window.open(url, title, 'toolbar=no, location=no, \
+									 directories=no, status=no, menubar=no, \
+									 scrollbars=no, resizable=no, copyhistory=no, \
+									 width='+w+', height='+h+', top='+top+', left='+left);
+
+			function settimer() {var timer = setInterval(function() { if(popupWindow.closed) { clearInterval(timer); window.location.href = cururl; alert(cururl); window.location.reload(true); }}, 100);}
+			popupWindow.addEventListener('load', settimer(), true); 
+		  } 
+		  
+		  $(elementselector).html('<p><i class="inline big disabled loading spinner icon"></i></p>');
+		  
 		  $.ajax({
-			url: probe_url,
+			url: probe_url + '&__PoolID=MOL',
 			cache: false,
 			success: function(value){ // PLP responded
 			  if(value == 0) { // logged in to PLP already
-				$.get(url) // run the app
+			    $.getScript(plpserverroot + '/reporting/jslatest/reportCore.js'); // for forms; should load in time for results
+				$.post(url + '&__PoolID=MOL', data) // run the app
 					 .success(function(str) {
+						 // if a complete HTML doc (with head) is passed, extract its head content
+						 if (str.indexOf('</head>') > -1) {
+							 strh = str.split("<head")[1].split(">").slice(1).join(">").split("</head>")[0];
+						 } else {
+							 strh = '';
+						 }
+						 var elh = $( '<div></div>' );
+						 elh.html(strh);
+
 						 // if a complete HTML doc (with head) is passed, extract its body content
 						 if (str.indexOf('</body>') > -1) {
 							 str = str.split("<body")[1].split(">").slice(1).join(">").split("</body>")[0];
 						 }
 						 var el = $( '<div></div>' );
 						 el.html(str);
+
+						 var scripts = $();
+						 var css = $();
+						 
 						 // Internalize and load all JS scripts required in PLP script tags
-						 var scripts = $('script[src*="/lang/javascript/"],script[src*="/waf/js/"],script[src*="/reporting/extjs/"],script[src*="/reporting/jslatest/"],script[src*="/reporting/javascript/"]', el);
+						 var scriptsh = $('script[src*="/lang/javascript/"],script[src*="/waf/js/"],script[src*="/reporting/extjs/"],script[src*="/reporting/jslatest/"],script[src*="/reporting/javascript/"],script[src*="/semantic/assets/"]', elh);
 						 // Internalize and load all CSS required in PLP link rel tags
-						 var css = $('link[rel="stylesheet"][href*="/reporting/css/"]', el);
+						 var cssh = $('link[rel="stylesheet"][href*="/reporting/css/"],link[rel="stylesheet"][href*="/semantic/assets/"]', elh);
+
+						 var scriptsb = $('script[src*="/lang/javascript/"],script[src*="/waf/js/"],script[src*="/reporting/extjs/"],script[src*="/reporting/jslatest/"],script[src*="/reporting/javascript/"],script[src*="/semantic/assets/"]', el);
+						 // Internalize and load all CSS required in PLP link rel tags
+						 var cssb = $('link[rel="stylesheet"][href*="/reporting/css/"],link[rel="stylesheet"][href*="/semantic/assets/"]', el);
+
 						 $("<style></style>").appendTo(css); // dummy to ensure the loop runs
+						 cssh.appendTo(css);
+						 cssb.appendTo(css);
+
+						 scriptsh.appendTo(scripts);
+						 scriptsb.appendTo(scripts);
 
 						 css.each(function(){ $('head').append($(this)); }).promise().done(function() {
-						   scripts.each(function(){
-							 var reg=/(jquery.min.js|semantic.min.js)/g; // exclusion list
+						   scripts.each(function(){ // run scripts then populate div
+							 var reg=/(jquery.min.js)/g; // exclusion list
 							 if (reg.test($(this).attr('src'))) {} else { $.getScript($(this).attr('src')); }
 						   }).promise().done(function() {
-							   if (/\.json$/.test(url)) {$(elementselector).html(JSON.stringify(str));} else {$(elementselector).html(str);}
-						   }); // run scripts then populate div
+								// run all embedded script tags
+								$('script', elh).each(function (index, element) { eval(element.innerHTML); });
+								$('script', el).each(function (index, element) { eval(element.innerHTML); });
+
+								// all done, now fill the container with content
+								if (/\.json$/.test(url)) {
+									$(elementselector).html(JSON.stringify(str));
+								} else {
+									try{$(elementselector).html(str);} catch(e){} finally{
+									   // add all <style> blocks to the widget container
+										$('style', elh).appendTo($(elementselector));
+										$('style', el).appendTo($(elementselector));
+										
+										$(elementselector).css("overflow-y", "scroll").addClass('ui basic segment').removeClass('raised very padded tertiary inverted red');
+									}
+								}
+
+						   });
 						 });
+						 
 					 })
 					 .error(function(xhr, status, error) {
-						  $(elementselector).addClass('ui negative message');
+						  $(elementselector).css("overflow-y", "scroll").addClass('ui raised very padded tertiary inverted red segment');
 						  var x = '';
 						  if (xhr.responseText) {
-							  x = '<div class="ui red icon message"><i class="frown icon"></i><div class="content"><div class="header">Error</div><p>An application error occurred calling the Pipeline Pilot server. Check that the protocol completes successfully.</p></div></div>' + xhr.responseText.replace(/\n/g, '<br/>')
+							  x = '<h2 class="ui red header">Error</h2><p>An application error occurred executing a job on the Pipeline Pilot server. Was the protocol found and did it <b>complete</b> successfully?</p>' + xhr.responseText.replace(/\n/g, '<br/>')
 						  } else {
-							  x = '<div class="ui red icon message"><i class="frown icon"></i><div class="content"><div class="header">Error</div><p>An application error occurred calling the Pipeline Pilot server. Check that you are using the correct server name, port and protocol ID.</p></div></div>';
+							  x = '<h2 class="ui red header">Error</h2><p>An application error occurred calling the Pipeline Pilot server. Check that you are using the <b>correct server name, port and protocol ID</b>.</p>';
 						  }
 						  $(elementselector).html(x);
 					 });
 			  } else {
-				$(elementselector).addClass('ui negative message');
-				$(elementselector).html('Pipeline Pilot refused the connection. ' + value);
+				$(elementselector).css("overflow-y", "scroll").addClass('ui raised very padded tertiary inverted red segment');
+				$(elementselector).html('<h2 class="ui red header">Error</h2><p>Pipeline Pilot refused the connection.</p><p>'+value+'</p>');
 			  }
 			},
 			error: function() {
-			  $(elementselector).addClass('ui yellow message');
-			  $(elementselector).html('<div class="ui yellow icon message"><i class="lock icon"></i><div class="content"><div class="header">Sign in Required</div><p>Log in to Pipeline Pilot webport (using its full server name e.g. name.domain.com) in another window then reload this page.</p></div></div>');
+			  $(elementselector).addClass('ui raised very padded tertiary inverted yellow segment');
+			  $(elementselector).html('<h2 class="ui header">Log in to Pipeline Pilot</h2><p><a id="login'+widget.oid+'" href="#">Click here</a> to log in.</p>');
+			  $('#' + 'login'+widget.oid).on('click', function(){ 
+				popupwindow(window.location.href, login_url + '&__PoolID=MOL', 'Log In', 600, 400); 
+			});
 			}
 		  });
 		}		
 		
-		plpRunner(widget.style.plpurl, 'plpcontent_' + widget.oid);
+		// Call Pipeline Pilot. Data structure example:
+		//       results: { 
+        //			"fname": n, 
+        //			"fdata": somejson or base64
+		//		}
+		// Each PLP global variable (protocol parameter) is a (named!) item in the data object.
+      
+
+		data = {
+			"headers": JSON.stringify(hs), 
+			"metadata": JSON.stringify(results.metadata), 
+			"values": JSON.stringify(arr)
+		}
+
+		plpUrlRunner(widget.style.plpurl, '#plpcontent_' + widget.oid, data);
 		
 		
 	} // render method

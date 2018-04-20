@@ -1,10 +1,10 @@
-<div data-ng-controller="plugin-sunovionScatterMatrix.controllers.stylerController">
+<div data-ng-controller="plugin-pipelinepilot.controllers.stylerController">
 
     <div class="settings-pane-host">
 			<div class="pane-row">
 				<div class="pane-row-title">Pipeline Pilot URL</div>
 				<input type="text"
-					   placeholder=""
+					   placeholder="http://myserver:myport/my-protocol-url-here"
 					   ng-change="onChange($event)"
 					   ng-model="model.plpurl"
 					   style="width: 100%";
@@ -14,12 +14,12 @@
 			<div class="pane-row">
 				<div class="pane-row-title">Row Limit</div>
 				<input type="text"
-					   placeholder="2500"
+					   placeholder="50000"
 					   ng-change="onChange($event)"
 					   ng-model="model.rowlimit"
 					   style="width: 100%";
 					   >
-				<p>When displaying very large result sets the widget may experience slow performance. Set a limit to prevent unexpected widget overload.</p>
+				<p>When processing very large result sets the widget may experience slow performance because it sends data to the Pipeline Pilot server.</p>
 			</div>
 	</div>
 </div>
