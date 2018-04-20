@@ -1,37 +1,24 @@
-## Welcome to GitHub Pages
+![saberinformatics logo](https://semanticplp.s3.amazonaws.com/saber-logo.png?AWSAccessKeyId=AKIAIHR7QYSU2SL7H7ZQ&Expires=1610505755&Signature=iLR6yyyhXK7kGDP6lo%2BTWZFWxgs%3D "Saber Informatics")
 
-You can use the [editor on GitHub](https://github.com/saberinformatics/sisense-pipelinepilot/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+# A widget for [Sisense Prism](https://documentationv7.sisense.com/v5/elasticube-manager/introduction-to-elasticube-manager/) to run [Pipeline Pilot](http://accelrys.com/products/collaborative-science/biovia-pipeline-pilot) protocols and webservices.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Add fantastic data processing capabilities to [Sisense Prism](https://documentationv7.sisense.com/v5/elasticube-manager/introduction-to-elasticube-manager/) which already has a performance-tuned data repository and a powerful visualization UI. Connect [Pipeline Pilot](http://accelrys.com/products/collaborative-science/biovia-pipeline-pilot) protocols to [Sisense](https://documentationv7.sisense.com/v5/elasticube-manager/introduction-to-elasticube-manager) data queries as they are performed by users in Sisense Prism.
 
-### Markdown
+Add a modern, data-connected and amazingly powerful user interface to [Pipeline Pilot](http://accelrys.com/products/collaborative-science/biovia-pipeline-pilot) protocols and web applications. [Sisense Prism](https://documentationv7.sisense.com/v5/elasticube-manager/introduction-to-elasticube-manager/) is a fast reporting database that responds to complex queries in seconds.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+The sisense-pipelinepilot widget is available to the community as open-source code under the MIT license. For those users who need additional assurance, commercial support is available directly from [Saber Informatics](https://saberinformatics.com). We are located in Massachusetts, US.
 
-```markdown
-Syntax highlighted code block
+## Compatibility
+Sisense Prism: v6, v7.
+Pipeline Pilot Server: Pipeline Pilot v9.2 or later, including 2018. Windows or UNIX.
 
-# Header 1
-## Header 2
-### Header 3
+## Installation
 
-- Bulleted
-- List
+The widget has been implemented as a plugin for Sisense Prism. Download the `pipelinepilot` folder into your C:\Program Files\Sisense\PrismWeb\plugins\ folder. If the plugins folder doesn’t exist, just create it. Within a few seconds Sisense will scan and load the plugin. You can then manage it in the [admin interface] (https://documentation.sisense.com/managing-plug-ins/).
 
-1. Numbered
-2. List
+There is no need to restart Sisense Prism. 
 
-**Bold** and _Italic_ and `Code` text
+In a dashboard add a new widget (Pipeline Pilot), select one or more data columns for it to read from the database, and set a Pipeline Pilot protocol URL to run. See the note below on configuring the Pipeline Pilot server for cross-origin resource sharing in web apps ([CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)): it is simple but it must be configured.
 
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/saberinformatics/sisense-pipelinepilot/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+## Note on [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
+Cross-origin resource sharing is a mechanism for web applications to pull interactive content from multiple servers, in this case Prism and Pipeline Pilot. It's a very simple setting on a Pipeline Pilot server (no need to set anything in Sisense Prism). -------- description to be added ------------------------------------------
