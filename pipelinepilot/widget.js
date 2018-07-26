@@ -155,7 +155,7 @@ prism.registerWidget("pipelinepilot", {
 
 		// Notes:
 		// DataTables from PLP will show unstyled search and pagination - to avoid conflicts with built-in Sisense tables
-		// * two or more plp widgets in a dashboard - any problems?
+		// Transitions are disabled (CSS isn't loaded) because that would conflict with widget rearrangement by users in Sisense
 		// Cross-domain CORS instructions for PLP - v2018 vs older - different steps
 
 		function plpUrlRunner(url, elementselector, data) {
@@ -168,8 +168,12 @@ prism.registerWidget("pipelinepilot", {
 		  $.support.cors = true;
 
 		  var s = widget.style.plpurl.split('/'); var plpserverroot = s[0] + '//' + s[2];
+		  if(s.length > 5 && s[4] == 'anon') {
+			var probe_url = plpserverroot + '/auth/anon/launchjob?$protocol=Components/Semantic+UI/Utilities/Internals/Check+Session'; // check session
+		  } else {
+			var probe_url = plpserverroot + '/auth/launchjob?$protocol=Components/Semantic+UI/Utilities/Internals/Check+Session'; // check session
+		  }
 		  var login_url = plpserverroot + '/auth/launchjob?$protocol=Components/Semantic+UI/Utilities/Internals/PLP+Login+Pop-Up&$streamfile='; // plp login prompt
-		  var probe_url = plpserverroot + '/auth/launchjob?$protocol=Components/Semantic+UI/Utilities/Internals/Check+Session'; // check session
 
 		  function popupwindow(cururl, url, title, w, h) {
 			var left = (screen.width/2)-(w/2);
@@ -179,7 +183,7 @@ prism.registerWidget("pipelinepilot", {
 									 scrollbars=no, resizable=no, copyhistory=no, \
 									 width='+w+', height='+h+', top='+top+', left='+left);
 
-			function settimer() {var timer = setInterval(function() { if(popupWindow.closed) { clearInterval(timer); window.location.href = cururl; alert(cururl); window.location.reload(true); }}, 100);}
+			function settimer() {var timer = setInterval(function() { if(popupWindow.closed) { clearInterval(timer); window.location.href = cururl; window.location.reload(true); }}, 100);}
 			popupWindow.addEventListener('load', settimer(), true); 
 		  } 
 		  
@@ -288,9 +292,9 @@ prism.registerWidget("pipelinepilot", {
       
 
 		data = {
-			"headers": JSON.stringify(hs), 
-			"metadata": JSON.stringify(results.metadata), 
-			"values": JSON.stringify(arr)
+			"___headers": JSON.stringify(hs), 
+			"___metadata": JSON.stringify(results.metadata), 
+			"___values": JSON.stringify(arr)
 		}
 
 		plpUrlRunner(widget.style.plpurl, '#plpcontent_' + widget.oid, data);
