@@ -21,7 +21,16 @@ There is no need to restart Sisense Prism.
 See the note below on enabling cross-origin resource sharing between the two servers ([CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)).
 
 ## Note on [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
-Cross-origin resource sharing is a mechanism for web applications to pull interactive content from multiple servers, in this case Prism and Pipeline Pilot. It's a very simple setting on a Pipeline Pilot server (no need to set anything in Sisense Prism). -------- description to be added ------------------------------------------
+Cross-origin resource sharing is a mechanism for web applications to pull interactive content from multiple servers via scripting, in this case Prism and Pipeline Pilot. For PLP v2018 and later, in the Admin Portal / Setup / Server Configuration, add your Sisense Prism server name in the box next to "Allow Cross-origin Requests". For PLP prior to v2018, add the following lines to the file apps\scitegic\core\packages_win64\apache\httpd-2.2.31\conf\httpd.conf (the exact path may vary depending on your PLP server version):
+```
+<IfModule mod_headers.c>
+         SetEnvIf Origin "http(s)?://(sisenseservername|localhost)$"
+AccessControlAllowOrigin=$0
+         Header add Access-Control-Allow-Origin
+%{AccessControlAllowOrigin}e env=AccessControlAllowOrigin
+    Header set Access-Control-Allow-Credentials true
+</IfModule>
+```
 
 ## Usage
-In a dashboard add a new widget (Pipeline Pilot), select one or more data columns for it to read from the elasticube, and set a Pipeline Pilot protocol URL to run. -------- description to be added ------------------------------------------
+In a dashboard, add a new widget (Pipeline Pilot), select one or more data columns for it to read from the elasticube, and set a Pipeline Pilot protocol URL to run.
